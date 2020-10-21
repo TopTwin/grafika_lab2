@@ -12,16 +12,21 @@
 #include "Camera.h"
 #include "Light.h"
 #include "Primitives.h"
-
+#include "string.h"
 #include "GUItextRectangle.h"
+#include <vector>
+using namespace std;
 
 bool textureMode = true;
 bool lightMode = true;
 
+vector <double> MakeVec(double[], double[]); 
+vector <double> NormalVec(vector <double>, vector <double>);
 void DrawingFigure();
 void DrawingCircleWalls(double* X, double* Y);
 void FoundR(double* X, double* Y, double R[]);
 double FoundCosAngle();
+void Uploadtex(const char*, const int);
 
 double A1[] = { 0,0,0.1 };
 double B1[] = { 5,0,0.1 };
@@ -250,7 +255,7 @@ void keyUpEvent(OpenGL *ogl, int key)
 
 
 
-GLuint texId;
+GLuint texId[3];
 
 //выполняется перед первым рендером
 void initRender(OpenGL *ogl)
@@ -266,36 +271,9 @@ void initRender(OpenGL *ogl)
 	//включаем текстуры
 	glEnable(GL_TEXTURE_2D);
 	
-
-	//массив трехбайтных элементов  (R G B)
-	RGBTRIPLE *texarray;
-
-	//массив символов, (высота*ширина*4      4, потомучто   выше, мы указали использовать по 4 байта на пиксель текстуры - R G B A)
-	char *texCharArray;
-	int texW, texH;
-	OpenGL::LoadBMP("texture.bmp", &texW, &texH, &texarray);
-	OpenGL::RGBtoChar(texarray, texW, texH, &texCharArray);
-
-	
-	
-	//генерируем ИД для текстуры
-	glGenTextures(1, &texId);
-	//биндим айдишник, все что будет происходить с текстурой, будте происходить по этому ИД
-	glBindTexture(GL_TEXTURE_2D, texId);
-
-	//загружаем текстуру в видеопямять, в оперативке нам больше  она не нужна
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texW, texH, 0, GL_RGBA, GL_UNSIGNED_BYTE, texCharArray);
-
-	//отчистка памяти
-	free(texCharArray);
-	free(texarray);
-
-	//наводим шмон
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
+	Uploadtex("texture.bmp", 0);
+	Uploadtex("tex2.bmp", 1);
+	Uploadtex("tex3.bmp", 2);
 
 	//камеру и свет привязываем к "движку"
 	ogl->mainCamera = &camera;
@@ -329,9 +307,6 @@ void initRender(OpenGL *ogl)
 
 void Render(OpenGL *ogl)
 {
-
-
-
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_LIGHTING);
 
@@ -372,7 +347,7 @@ void Render(OpenGL *ogl)
 
 
 	//-------------------------------------------------------------------------
-
+	
 	glPushMatrix();
 	glTranslated(4.5, -4, 0);
 	DrawingFigure();
@@ -453,9 +428,13 @@ void Render(OpenGL *ogl)
 
 void DrawingFigure()
 {
+	vector <double> vec1 = { 0,0,0 };
+	vector <double> vec2 = { 0,0,0 };
+
 #pragma region Base
 
 	glBegin(GL_TRIANGLES);
+	glNormal3d(0, 0, -1);
 	glColor3d(0.2, 0.2, 0.2);
 	glVertex3dv(A1);
 	glVertex3dv(B1);
@@ -473,6 +452,7 @@ void DrawingFigure()
 	glVertex3dv(C1);
 	glVertex3dv(D1);
 	//---------------------------
+	glNormal3d(0, 0, 1);
 	glColor3d(0.2, 0.2, 0.2);
 	glVertex3dv(A2);
 	glVertex3dv(B2);
@@ -493,33 +473,77 @@ void DrawingFigure()
 #pragma endregion
 
 #pragma region Walls
+	
+	glBindTexture(GL_TEXTURE_2D, texId[0]);
 	glBegin(GL_QUADS);
-
+	vec1 = MakeVec(B2,A2);
+	vec2 = MakeVec(B2,B1);
+	vec1 = NormalVec(vec1,vec2);
+	glNormal3d(vec1[0],vec1[1],vec1[2]);
 	glColor3d(0.8, 0, 0);
+	glTexCoord2d(0, 0);
 	glVertex3dv(A1);
+	glTexCoord2d(0, 1);
 	glVertex3dv(A2);
+	glTexCoord2d(1, 1);
 	glVertex3dv(B2);
+	glTexCoord2d(1, 0);
 	glVertex3dv(B1);
+	glEnd();
 
+	glBindTexture(GL_TEXTURE_2D, texId[1]);
+	glBegin(GL_QUADS);
+	vec1 = MakeVec(C2, B2);
+	vec2 = MakeVec(C2, C1);
+	vec1 = NormalVec(vec1, vec2);
+	glNormal3d(vec1[0], vec1[1], vec1[2]);
 	glColor3d(0.7, 0, 0);
+	glTexCoord2d(0, 1);
 	glVertex3dv(C1);
+	glTexCoord2d(1, 1);
 	glVertex3dv(C2);
+	glTexCoord2d(1, 0);
 	glVertex3dv(B2);
+	glTexCoord2d(0, 0);
 	glVertex3dv(B1);
+	glEnd();
 
+	glBindTexture(GL_TEXTURE_2D, texId[2]);
+	glBegin(GL_QUADS);
+	vec1 = MakeVec(D2, C2);
+	vec2 = MakeVec(D2, D1);
+	vec1 = NormalVec(vec1, vec2);
+	glNormal3d(vec1[0], vec1[1], vec1[2]);
 	glColor3d(0.6, 0, 0);
+	glTexCoord2d(0, 0);
 	glVertex3dv(C1);
+	glTexCoord2d(0, 1);
 	glVertex3dv(C2);
+	glTexCoord2d(1, 1);
 	glVertex3dv(D2);
+	glTexCoord2d(1, 0);
 	glVertex3dv(D1);
 
+	vec1 = MakeVec(E2, D2);
+	vec2 = MakeVec(E2, E1);
+	vec1 = NormalVec(vec1, vec2);
+	glNormal3d(vec1[0], vec1[1], vec1[2]);
 	glColor3d(0.5, 0, 0);
 	glVertex3dv(D1);
 	glVertex3dv(D2);
 	glVertex3dv(E2);
 	glVertex3dv(E1);
+	glEnd();
 
-	glColor3d(0.4, 0, 0);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBegin(GL_QUADS);
+	glColor4d(0.3, 0.5, 0.2, 0.3);
+	vec1 = MakeVec(A2, F2);
+	vec2 = MakeVec(A2, A1);
+	vec1 = NormalVec(vec1, vec2);
+	glNormal3d(vec1[0], vec1[1], vec1[2]);
 	glVertex3dv(F1);
 	glVertex3dv(F2);
 	glVertex3dv(A2);
@@ -550,11 +574,13 @@ void DrawingFigure()
 		Y[1] = (R[1] + sin(angle + i) * R[3]);//êîîðäèíàòà Ó âòîðîé òî÷êè
 
 		glBegin(GL_TRIANGLES);
+		glNormal3d(0, 0, -1);
 		glColor3d(0, 0.7, 0);
 		glVertex3d(R[0], R[1], R[2]);
 		glVertex3d(X[0], X[1], 0.1);
 		glVertex3d(Y[0], Y[1], 0.1);
 
+		glNormal3d(0, 0, 1);
 		glVertex3d(R[0], R[1], 4);
 		glVertex3d(X[0], X[1], 4);
 		glVertex3d(Y[0], Y[1], 4);
@@ -562,6 +588,11 @@ void DrawingFigure()
 		glEnd();
 
 		glBegin(GL_QUADS);
+		vec1 = MakeVec(Y, X);
+		double buf[] = { Y[0],Y[1],4 };
+		vec2 = MakeVec(buf, Y);
+		vec1 = NormalVec(vec1, vec2);
+		glNormal3d(vec1[0], vec1[1], vec1[2]);
 		glColor3d(0, 0, 0.6);
 		glVertex3d(X[0], X[1], 0.1);
 		glVertex3d(Y[0], Y[1], 0.1);
@@ -604,4 +635,51 @@ double FoundCosAngle()
 	double Gipoten = sqrt(1.5 * 1.5 + 3.5 * 3.5);
 	double CosAngle = 1.5 / Gipoten;
 	return acos(CosAngle);
+}
+
+vector <double> MakeVec(double X[], double Y[])
+{
+	vector <double> vec = { 0,0,0 };
+	vec[0] = Y[0] - X[0];
+	vec[1] = Y[1] - X[1];
+	vec[2] = Y[2] - X[2];
+	return vec;
+}
+
+vector <double> NormalVec(vector <double> vec1, vector <double> vec2)
+{
+	vector <double> normvec = { 0,0,0 };
+
+	normvec[0] = vec1[1] * vec2[2] - vec2[1] * vec1[2];
+	normvec[1] = -vec1[0] * vec2[2] + vec2[0] * vec1[2];
+	normvec[2] = vec1[0] * vec2[1] - vec2[0] * vec1[1];
+	return normvec;
+}
+
+void Uploadtex(const char* name, const int NumberOfTexId)
+{
+	//массив трехбайтных элементов  (R G B)
+	RGBTRIPLE* texarray;
+
+	//массив символов, (высота*ширина*4      4, потомучто   выше, мы указали использовать по 4 байта на пиксель текстуры - R G B A)
+	char* texCharArray;
+	int texW, texH;
+
+	OpenGL::LoadBMP(name, &texW, &texH, &texarray);
+	OpenGL::RGBtoChar(texarray, texW, texH, &texCharArray);
+
+	glGenTextures(1, &texId[NumberOfTexId]);
+	glBindTexture(GL_TEXTURE_2D, texId[NumberOfTexId]);
+	//загружаем текстуру в видеопямять, в оперативке нам больше  она не нужна
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texW, texH, 0, GL_RGBA, GL_UNSIGNED_BYTE, texCharArray);
+
+	//отчистка памяти
+	free(texCharArray);
+	free(texarray);
+
+	//наводим шмон
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }

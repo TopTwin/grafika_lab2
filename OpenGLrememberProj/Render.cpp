@@ -536,10 +536,11 @@ void DrawingFigure()
 	glEnd();
 
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 	glBegin(GL_QUADS);
-	glColor4d(0.3, 0.5, 0.2, 0.3);
+	//glColor4d(0.3, 0.5, 0.2, 0.3);
 	vec1 = MakeVec(A2, F2);
 	vec2 = MakeVec(A2, A1);
 	vec1 = NormalVec(vec1, vec2);
@@ -552,14 +553,14 @@ void DrawingFigure()
 #pragma endregion
 
 #pragma region Semicircle
-	double grad = 0.005;	//Øàã ìåæäó òî÷êàìè íà îêðóæíîñòè â ðàäèàíàõ
+	double grad = 0.005;	
 	double X[] = { 0,0,0.1 };
 	double Y[] = { 0,0,0.1 };
 
-	FoundR(F1, E1, R);//Íàõîäèì êîîðäèíàòû öåíòðà îêðóæíîñòè è ðàäèóñ
+	FoundR(F1, E1, R);
 
 	//double vector[] = { 3, 7, 0 };
-	//R[0] += R[0] * 3 * -0.00035;		//Íåáîëüøàÿ êîððåêòèðîâêà êîîðäèíàò öåíòðà îêðóæíîñòè
+	//R[0] += R[0] * 3 * -0.00035;		
 	//R[1] += R[1] * 7 * -0.00035;
 
 	glPushMatrix();
@@ -567,11 +568,11 @@ void DrawingFigure()
 	double angle = FoundCosAngle();
 	for (double i = 0.005; i < 3.145; i += 0.005)
 	{
-		X[0] = (R[0] + cos(angle + i - grad) * R[3]);//êîîðäèíàòà Õ ïåðâîé òî÷êè
-		X[1] = (R[1] + sin(angle + i - grad) * R[3]);//êîîðäèíàòà Ó ïåðâîé òî÷êè
+		X[0] = (R[0] + cos(angle + i - grad) * R[3]);
+		X[1] = (R[1] + sin(angle + i - grad) * R[3]);
 
-		Y[0] = (R[0] + cos(angle + i) * R[3]);//êîîðäèíàòà Õ âòîðîé òî÷êè
-		Y[1] = (R[1] + sin(angle + i) * R[3]);//êîîðäèíàòà Ó âòîðîé òî÷êè
+		Y[0] = (R[0] + cos(angle + i) * R[3]);
+		Y[1] = (R[1] + sin(angle + i) * R[3]);
 
 		glBegin(GL_TRIANGLES);
 		glNormal3d(0, 0, -1);
@@ -658,7 +659,7 @@ vector <double> NormalVec(vector <double> vec1, vector <double> vec2)
 
 void Uploadtex(const char* name, const int NumberOfTexId)
 {
-	//массив трехбайтных элементов  (R G B)
+	
 	RGBTRIPLE* texarray;
 
 	//массив символов, (высота*ширина*4      4, потомучто   выше, мы указали использовать по 4 байта на пиксель текстуры - R G B A)
